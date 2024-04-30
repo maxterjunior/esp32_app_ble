@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:esp32_app/device_page.dart';
 import 'package:esp32_app/helpers/database.dart';
+import 'package:esp32_app/utils/snackbar.dart';
 import 'package:esp32_app/widgets/next_screen.dart';
 import 'package:esp32_app/widgets/target_widget.dart';
 import 'package:flutter/material.dart';
@@ -11,17 +13,45 @@ import 'package:page_transition/page_transition.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ConnectToDevice extends StatefulWidget {
-  const ConnectToDevice({Key? key}) : super(key: key);
+  const ConnectToDevice({super.key});
 
   @override
   State<ConnectToDevice> createState() => _ConnectToDeviceState();
 }
 
 class _ConnectToDeviceState extends State<ConnectToDevice> {
+  List<ScanResult> _scanResults = [];
+  bool _isScanning = false;
+  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  late StreamSubscription<bool> _isScanningSubscription;
+
   @override
   void initState() {
     super.initState();
-    FlutterBluePlus.instance.startScan(timeout: const Duration(seconds: 2));
+    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
+      _scanResults = results;
+      if (mounted) {
+        setState(() {});
+      }
+    }, onError: (e) {
+      print('Error: $e');
+      Snackbar.show(ABC.b, prettyException("Scan Error:", e), success: false);
+    });
+
+    _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
+      _isScanning = state;
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    onRefresh();
+  }
+
+  @override
+  void dispose() {
+    _scanResultsSubscription.cancel();
+    _isScanningSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -78,43 +108,58 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
     return RefreshIndicator(
       color: Theme.of(context).focusColor,
       displacement: 20.0,
-      onRefresh: () => FlutterBluePlus.instance.startScan(
-        timeout: const Duration(seconds: 1),
-      ),
+      onRefresh: onRefresh,
       child: ListView(
         physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics()),
         children: [
-          StreamBuilder<List<ScanResult>>(
-            stream: FlutterBluePlus.instance.scanResults,
-            initialData: const [],
-            builder: (c, snapshot) => Column(
-              children: snapshot.data!.map((r) {
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  title: Text(
-                      r.device.name != '' ? r.device.name : 'Desconocido',
-                      style: const TextStyle(
-                          fontSize: 17.0, fontWeight: FontWeight.bold)),
-                  subtitle: Text(r.device.id.toString()),
-                  trailing: ElevatedButton(
-                    child: const Text('Conectar'),
-                    onPressed: () {
-                      r.device.connect();
-                      nextScreenReplace(
-                        context,
-                        DeviceScreen(device: r.device, isConnected: false),
-                        PageTransitionType.rightToLeft,
-                      );
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          )
+          _scanResults.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text('Sin dispositivos encontrados'),
+                )
+              : Column(
+                  children: _scanResults.map((r) {
+                    return ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 25.0),
+                      title: Text(
+                        r.device.platformName != ''
+                            ? r.device.platformName
+                            : 'Desconocido',
+                        style: const TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(r.device.remoteId.toString()),
+                      trailing: ElevatedButton(
+                        child: const Text('Conectar'),
+                        onPressed: () {
+                          r.device.connect();
+                          nextScreenReplace(
+                            context,
+                            DeviceScreen(device: r.device, isConnected: false),
+                            PageTransitionType.rightToLeft,
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
         ],
       ),
     );
+  }
+
+  Future onRefresh() {
+    if (_isScanning == false) {
+      FlutterBluePlus.startScan(timeout: const Duration(seconds: 3));
+    }
+    if (mounted) {
+      setState(() {});
+    }
+    return Future.delayed(const Duration(seconds: 15));
   }
 
   void _exportDB() async {

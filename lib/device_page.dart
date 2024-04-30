@@ -10,10 +10,10 @@ import 'package:page_transition/page_transition.dart';
 
 class DeviceScreen extends StatefulWidget {
   const DeviceScreen({
-    Key? key,
+    super.key,
     required this.device,
     required this.isConnected,
-  }) : super(key: key);
+  });
 
   final BluetoothDevice device;
   final bool isConnected;
@@ -26,15 +26,10 @@ class _DeviceScreenState extends State<DeviceScreen> {
   final String serviceGpsUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
   final String charactGpsUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-  late Stream<List<int>> streamSR0401;
-  late Stream<List<int>> streamSR0402;
-  late Stream<List<int>> broadcastStream;
-  late Stream<List<int>> streamPH;
-  late Stream<List<int>> streamTurb;
-  late Stream<List<int>> streamMotor;
-
   late Stream<List<int>>? streamGps;
-  // late StreamSubscription<_DeviceScreenState> _adapterGpsSubscription;
+
+  // late StreamSubscription<List<int>> _lastValueSubscription;
+  // late List<int> _valueGps = [];
 
   late bool isReady;
   late bool hasError = false;
@@ -49,9 +44,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
   @override
   void initState() {
     super.initState();
-    widget.device.disconnect();
     isReady = false;
     connectDevice();
+  }
+
+  @override
+  void dispose() {
+    // _lastValueSubscription.cancel();
+    super.dispose();
   }
 
   void connectDevice() async {
@@ -72,7 +72,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   void discoverServices() async {
     print('Device state:');
-    print(widget.device.type);
+    print(widget.device.isConnected);
 
     print('Discovering services...');
     try {
@@ -82,9 +82,20 @@ class _DeviceScreenState extends State<DeviceScreen> {
         print('Service: ' + service.uuid.toString());
         if (service.uuid.toString() == serviceGpsUuid) {
           findService = true;
+          print('Service found: ' + service.uuid.toString());
           for (var characteristic in service.characteristics) {
+            print('Characteristic: ' + characteristic.uuid.toString());
             if (characteristic.uuid.toString() == charactGpsUuid) {
-              streamGps = characteristic.value;
+              streamGps = characteristic.lastValueStream;
+              // characteristic.isReady = true;
+              // _lastValueSubscription =
+              //     characteristic.lastValueStream.listen((value) {
+              //   _valueGps = value;
+              //   print('Value: ' + utf8.decode(_valueGps));
+              //   if (mounted) {
+              //     setState(() {});
+              //   }
+              // });
               isReady = true;
               setState(() {});
             }
@@ -169,24 +180,25 @@ class _DeviceScreenState extends State<DeviceScreen> {
           children: [
             const SizedBox(height: 5),
             Text(
-              widget.device.name,
+              widget.device.platformName,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 5),
-            Text('Demo BLE - Gps / Gnss', style: Theme.of(context).textTheme.displaySmall),
+            Text('Demo BLE - Gps / Gnss',
+                style: Theme.of(context).textTheme.displaySmall),
           ],
         ),
         const Expanded(child: SizedBox()),
-        StreamBuilder<BluetoothDeviceState>(
-          stream: widget.device.state,
-          initialData: BluetoothDeviceState.connecting,
+        StreamBuilder<BluetoothConnectionState>(
+          stream: widget.device.connectionState,
+          initialData: BluetoothConnectionState.disconnected,
           builder: (c, snapshot) {
             VoidCallback? onPressed;
             Color color = Colors.white;
-            if (snapshot.data == BluetoothDeviceState.connecting) {
+            if (snapshot.data == BluetoothConnectionState.disconnected) {
               onPressed = null;
               color = Colors.white;
-            } else if (snapshot.data == BluetoothDeviceState.connected ||
+            } else if (snapshot.data == BluetoothConnectionState.connected ||
                 hasError) {
               onPressed = () {
                 widget.device.disconnect();
@@ -230,19 +242,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
     );
   }
 
-  _widgetsColumn() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // _widget(streamMotor, _motor),
-        // Divider(thickness: 1, color: Colors.blueGrey[350]),
-        // _widget(broadcastStream, _velocidad),
-        // Divider(thickness: 1, color: Colors.blueGrey[350]),
-        // _widget(streamSR0402, _cisterna),
-        _widget(streamGps!, _gps)
-      ]),
-    );
-  }
+  // _widgetsColumn() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(16.0),
+  //     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  //       _widget(streamGps!, _gps)
+  //     ]),
+  //   );
+  // }
 
   _dataParser(List<int> dataFromDevice) {
     return utf8.decode(dataFromDevice);

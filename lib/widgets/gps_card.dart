@@ -46,16 +46,16 @@ import 'package:latlong2/latlong.dart';
 // }
 
 class GpsCard extends StatefulWidget {
-  const GpsCard(this.lat, this.lng, {Key? key}) : super(key: key);
+  const GpsCard(this.lat, this.lng, {super.key});
 
   final double lat;
   final double lng;
 
   @override
-  _GpsCardState createState() => _GpsCardState();
+  GpsCardState createState() => GpsCardState();
 }
 
-class _GpsCardState extends State<GpsCard> {
+class GpsCardState extends State<GpsCard> {
   final MapController mapController = MapController();
 
   static const _interactionOptions = InteractionOptions(
@@ -89,15 +89,17 @@ class _GpsCardState extends State<GpsCard> {
         MarkerLayer(
           markers: [
             Marker(
-              width: 80.0,
-              height: 80.0,
-              point: LatLng(widget.lat, widget.lng),
-              child: const Icon(
-                Icons.location_on,
-                size: 50,
-                color: Colors.blue,
-              ),
-            ),
+                width: 80.0,
+                height: 80.0,
+                point: LatLng(widget.lat, widget.lng),
+                child: Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: const Icon(
+                    Icons.location_on,
+                    size: 50,
+                    color: Colors.blue,
+                  ),
+                )),
           ],
         ),
       ],

@@ -1,4 +1,5 @@
-import 'package:esp32_app/device_page.dart';
+import 'dart:async';
+
 import 'package:esp32_app/screens/bluetooth_disable.dart';
 import 'package:esp32_app/screens/connect_to_device.dart';
 import 'package:esp32_app/theme/theme_constants.dart';
@@ -24,50 +25,53 @@ void main() {
 }
 
 void requestPermission() async {
-  var p1 = await Permission.bluetooth.request();
-  var p2 = await Permission.location.request();
-  print(p1);
-  print(p2);
+  Map<Permission, PermissionStatus> statuses = await [
+    Permission.bluetooth,
+    Permission.bluetoothScan,
+    Permission.locationAlways,
+    Permission.location,
+    Permission.nearbyWifiDevices,
+  ].request();
+  print(statuses);
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
+  late StreamSubscription<BluetoothAdapterState> _adapterStateStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _adapterStateStateSubscription =
+        FlutterBluePlus.adapterState.listen((state) {
+      _adapterState = state;
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _adapterStateStateSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: lightMode,
-      darkTheme: darkMode,
-      home: StreamBuilder<BluetoothState>(
-        stream: FlutterBluePlus.instance.state,
-        initialData: BluetoothState.unknown,
-        builder: (c, snapshot) {
-          final state = snapshot.data;
-          print(state);
-          if (state == BluetoothState.on) {
-            return stateDevice();
-          }
-          return BluetoothOffScreen(state: state);
-        },
-      ),
-    );
-  }
-
-  stateDevice() {
-    dynamic disp;
-    return StreamBuilder<List<BluetoothDevice>>(
-      stream: FlutterBluePlus.instance.connectedDevices.asStream(),
-      initialData: const [],
-      builder: (c, snapshot) {
-        List<BluetoothDevice> data = snapshot.data!;
-        for (var element in data) {
-          disp = element;
-        }
-        return data.isNotEmpty
-            ? DeviceScreen(device: disp, isConnected: true)
-            : const ConnectToDevice();
-      },
-    );
+        debugShowCheckedModeBanner: false,
+        theme: lightMode,
+        darkTheme: darkMode,
+        home: _adapterState == BluetoothAdapterState.on
+            ? const ConnectToDevice()
+            : const BluetoothOffScreen());
   }
 }
