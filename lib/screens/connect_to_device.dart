@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:esp32_app/device_page.dart';
@@ -119,7 +120,7 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
   void _exportDB() async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     DatabaseHelper.instance.queryAllRows().then((value) async {
-      final String val = value.toString();
+      String val = jsonEncode(value);
 
       // Comparte el archivo
       final shareResult = await Share.shareXFiles([
@@ -127,6 +128,7 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
           Uint8List.fromList(val.codeUnits),
           name: 'my_data.txt',
           mimeType: 'application/json',
+          // mimeType: 'text/plain',
         ),
       ]);
 
