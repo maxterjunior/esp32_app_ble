@@ -5,6 +5,7 @@ import 'package:esp32_app/theme/theme_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +16,18 @@ void main() {
   SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
   );
+
+  // Pedir permisos de ubicación y bluetooth
+  requestPermission();
+
   runApp(const MyApp());
+}
+
+void requestPermission() async {
+  var p1 = await Permission.bluetooth.request();
+  var p2 = await Permission.location.request();
+  print(p1);
+  print(p2);
 }
 
 class MyApp extends StatelessWidget {
@@ -32,6 +44,7 @@ class MyApp extends StatelessWidget {
         initialData: BluetoothState.unknown,
         builder: (c, snapshot) {
           final state = snapshot.data;
+          print(state);
           if (state == BluetoothState.on) {
             return stateDevice();
           }
