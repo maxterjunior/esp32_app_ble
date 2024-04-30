@@ -135,13 +135,42 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
   }
 
   void _clearBD() async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    await DatabaseHelper.instance.deleteAll();
-    scaffoldMessenger.showSnackBar(
-      const SnackBar(
-        content: Text('Base de datos eliminada'),
-        duration: Duration(seconds: 5),
-      ),
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: const Text("Cancelar"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+    Widget continueButton = TextButton(
+      child: const Text("Continuar"),
+      onPressed: () async {
+        Navigator.of(context).pop();
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        await DatabaseHelper.instance.deleteAll();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Base de datos eliminada'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      },
+    );
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: const Text("Borrar base de datos"),
+      content: const Text("¿Está seguro de guardar todos los datos?"),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 
@@ -158,36 +187,4 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
       ),
     );
   }
-  // Widget _devicesConnected() {
-  //   return StreamBuilder<List<BluetoothDevice>>(
-  //     stream: Stream.periodic(const Duration(seconds: 1))
-  //         .asyncMap((_) => FlutterBluePlus.instance.connectedDevices),
-  //     initialData: const [],
-  //     builder: (c, snapshot) => Column(
-  //       children: snapshot.data!
-  //           .map((d) => StreamBuilder<BluetoothDeviceState>(
-  //                 stream: d.state,
-  //                 initialData: BluetoothDeviceState.disconnected,
-  //                 builder: (c, snapshot) {
-  //                   if (snapshot.data == BluetoothDeviceState.connected) {
-  //                     return ListTile(
-  //                       title: Text(d.name),
-  //                       subtitle: const Text('Conectado'),
-  //                       trailing: ElevatedButton(
-  //                         child: const Text('ABRIR'),
-  //                         onPressed: () => nextScreenReplace(
-  //                           context,
-  //                           DeviceScreen(device: d, isConnected: true),
-  //                           PageTransitionType.rightToLeft,
-  //                         ),
-  //                       ),
-  //                     );
-  //                   }
-  //                   return Container();
-  //                 },
-  //               ))
-  //           .toList(),
-  //     ),
-  //   );
-  // }
 }
