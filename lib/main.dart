@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:esp32_app/screens/bluetooth_disable.dart';
 import 'package:esp32_app/screens/connect_to_device.dart';
+import 'package:esp32_app/screens/splash.dart';
 import 'package:esp32_app/theme/theme_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,21 +19,7 @@ void main() {
     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
   );
 
-  // Pedir permisos de ubicación y bluetooth
-  requestPermission();
-
   runApp(const MyApp());
-}
-
-void requestPermission() async {
-  Map<Permission, PermissionStatus> statuses = await [
-    Permission.bluetooth,
-    Permission.bluetoothScan,
-    Permission.locationAlways,
-    Permission.location,
-    Permission.nearbyWifiDevices,
-  ].request();
-  print(statuses);
 }
 
 class MyApp extends StatefulWidget {
@@ -46,9 +33,35 @@ class _MyAppState extends State<MyApp> {
   BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
   late StreamSubscription<BluetoothAdapterState> _adapterStateStateSubscription;
 
+  bool hasPermisions = false;
+  Map<Permission, PermissionStatus> permissions = {};
+
+  void requestPermission() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    permissions = await [
+      Permission.bluetoothScan,
+      Permission.location,
+      Permission.nearbyWifiDevices,
+    ].request();
+
+    hasPermisions = getPermisions();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  bool getPermisions() {
+    return permissions[Permission.bluetoothScan]!.isGranted &&
+        permissions[Permission.location]!.isGranted &&
+        permissions[Permission.nearbyWifiDevices]!.isGranted;
+  }
+
   @override
   void initState() {
     super.initState();
+    requestPermission();
     _adapterStateStateSubscription =
         FlutterBluePlus.adapterState.listen((state) {
       _adapterState = state;
@@ -70,8 +83,14 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         theme: lightMode,
         darkTheme: darkMode,
-        home: _adapterState == BluetoothAdapterState.on
-            ? const ConnectToDevice()
-            : const BluetoothOffScreen());
+        // home: _adapterState == BluetoothAdapterState.on
+        //     ? const ConnectToDevice()
+        //     : const BluetoothOffScreen());
+        // home: const SplashScreen());
+        home: hasPermisions
+            ? _adapterState == BluetoothAdapterState.on
+                ? const ConnectToDevice()
+                : const BluetoothOffScreen()
+            : SplashScreen(permissions));
   }
 }
