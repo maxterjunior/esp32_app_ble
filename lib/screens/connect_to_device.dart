@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:esp32_app/device_page.dart';
 import 'package:esp32_app/helpers/database.dart';
+import 'package:esp32_app/screens/visualize_data.dart';
 import 'package:esp32_app/utils/snackbar.dart';
 import 'package:esp32_app/widgets/next_screen.dart';
 import 'package:esp32_app/widgets/target_widget.dart';
@@ -88,11 +89,20 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
                   children: [
                     ElevatedButton(
                       onPressed: _exportDB,
-                      child: const Text('Exportar BD'),
+                      child: const Icon(Icons.share),
                     ),
                     ElevatedButton(
+                        onPressed: (() => {
+                          nextScreenReplace(
+                            context,
+                            const VisualizeData(),
+                            PageTransitionType.rightToLeft,
+                          )
+                        }),
+                        child: const Icon(Icons.data_usage)),
+                    ElevatedButton(
                       onPressed: _clearBD,
-                      child: const Text('Limpiar BD'),
+                      child: const Icon(Icons.delete),
                     ),
                   ],
                 ),
@@ -161,6 +171,8 @@ class _ConnectToDeviceState extends State<ConnectToDevice> {
     }
     return Future.delayed(const Duration(seconds: 15));
   }
+
+
 
   void _exportDB() async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);

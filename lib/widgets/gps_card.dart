@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 // ignore: depend_on_referenced_packages
 import 'package:latlong2/latlong.dart';
+// import 'package:wakelock/wakelock.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class GpsCard extends StatefulWidget {
   const GpsCard(this.lat, this.lng, {super.key});
@@ -23,11 +25,32 @@ class GpsCardState extends State<GpsCard> {
   bool _isFirstBuild = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Wakelock.enable();
+  }
+
+  @override
+  void dispose() {
+    // Wakelock.disable();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant GpsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_isFirstBuild) {
       mapController.move(LatLng(widget.lat, widget.lng), 15.0);
       _isFirstBuild = false;
+
+      // Notification
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initializationSettings =
+          InitializationSettings(android: initializationSettingsAndroid);
+      flutterLocalNotificationsPlugin.initialize(initializationSettings);
     }
   }
 

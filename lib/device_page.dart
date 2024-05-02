@@ -28,9 +28,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   late Stream<List<int>>? streamGps;
 
-  // late StreamSubscription<List<int>> _lastValueSubscription;
-  // late List<int> _valueGps = [];
-
   late bool isReady;
   late bool hasError = false;
   double velocidad = 0.0;
@@ -55,13 +52,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   void connectDevice() async {
-    print('Widget state:' + widget.isConnected.toString());
     if (!widget.isConnected) {
       await widget.device
           .connect()
           .whenComplete(() => discoverServices())
           .catchError((e) {
-        print('Error connectDevice: $e');
         hasError = true;
         setState(() {});
       });
@@ -71,10 +66,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
   }
 
   void discoverServices() async {
-    print('Device state:');
-    print(widget.device.isConnected);
-
-    print('Discovering services...');
     try {
       List<BluetoothService> services = await widget.device.discoverServices();
       bool findService = false;
@@ -87,15 +78,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
             print('Characteristic: ' + characteristic.uuid.toString());
             if (characteristic.uuid.toString() == charactGpsUuid) {
               streamGps = characteristic.lastValueStream;
-              // characteristic.isReady = true;
-              // _lastValueSubscription =
-              //     characteristic.lastValueStream.listen((value) {
-              //   _valueGps = value;
-              //   print('Value: ' + utf8.decode(_valueGps));
-              //   if (mounted) {
-              //     setState(() {});
-              //   }
-              // });
               isReady = true;
               setState(() {});
             }
@@ -241,15 +223,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
       },
     );
   }
-
-  // _widgetsColumn() {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(16.0),
-  //     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-  //       _widget(streamGps!, _gps)
-  //     ]),
-  //   );
-  // }
 
   _dataParser(List<int> dataFromDevice) {
     return utf8.decode(dataFromDevice);
