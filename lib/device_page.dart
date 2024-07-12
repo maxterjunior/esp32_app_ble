@@ -175,23 +175,22 @@ class _DeviceScreenState extends State<DeviceScreen> {
           stream: widget.device.connectionState,
           initialData: BluetoothConnectionState.disconnected,
           builder: (c, snapshot) {
-            VoidCallback? onPressed;
+            onPressed() {
+              widget.device.disconnect();
+              streamGps = null;
+              nextScreenReplace(
+                context,
+                const ConnectToDevice(),
+                PageTransitionType.leftToRight,
+              );
+            }
+
             Color color = Colors.white;
             if (snapshot.data == BluetoothConnectionState.disconnected) {
-              onPressed = null;
-              color = Colors.white;
+              color = Colors.red;
             } else if (snapshot.data == BluetoothConnectionState.connected ||
                 hasError) {
-              onPressed = () {
-                widget.device.disconnect();
-                streamGps = null;
-                nextScreenReplace(
-                  context,
-                  const ConnectToDevice(),
-                  PageTransitionType.leftToRight,
-                );
-              };
-              color = Colors.red;
+              color = Colors.green;
             }
             return IconButton(
               iconSize: 28.0,
