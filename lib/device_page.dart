@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:convert' show utf8;
 
@@ -38,6 +40,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
     Target(title: 'GPS', content: _widget(streamGps!, _gps)),
   ];
 
+  StreamSubscription? _lastValueSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +51,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   @override
   void dispose() {
-    // _lastValueSubscription.cancel();
+    streamGps = null;
+    _lastValueSubscription?.cancel();
     super.dispose();
   }
 
@@ -70,14 +75,32 @@ class _DeviceScreenState extends State<DeviceScreen> {
       List<BluetoothService> services = await widget.device.discoverServices();
       bool findService = false;
       for (var service in services) {
-        print('Service: ' + service.uuid.toString());
+        print('Service: ${service.uuid}');
         if (service.uuid.toString() == serviceGpsUuid) {
           findService = true;
-          print('Service found: ' + service.uuid.toString());
+          print('Service found: ${service.uuid}');
           for (var characteristic in service.characteristics) {
-            print('Characteristic: ' + characteristic.uuid.toString());
+            print('Characteristic: ${characteristic.uuid}');
             if (characteristic.uuid.toString() == charactGpsUuid) {
               streamGps = characteristic.lastValueStream;
+              // Guardar los datos en la base de datos
+
+              _lastValueSubscription?.cancel();
+
+              _lastValueSubscription = streamGps!.listen((value) {
+                var data = utf8.decode(value);
+                if (data.isEmpty || data == '') return;
+                var gpsData = data.split(',');
+                if (gpsData.length == 2) {
+                  var lat = double.parse(gpsData[0]);
+                  var lng = double.parse(gpsData[1]);
+                  DatabaseHelper.instance.insert({
+                    DatabaseHelper.columnLat: lat,
+                    DatabaseHelper.columnLong: lng,
+                  });
+                }
+              });
+
               isReady = true;
               setState(() {});
             }
@@ -104,13 +127,8 @@ class _DeviceScreenState extends State<DeviceScreen> {
       if (data.length == 2) {
         lat = double.parse(data[0]);
         lng = double.parse(data[1]);
-        DatabaseHelper.instance.insert({
-          DatabaseHelper.columnLat: lat,
-          DatabaseHelper.columnLong: lng,
-        });
       }
     }
-
     return GpsCard(lat, lng);
   }
 
@@ -178,6 +196,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             onPressed() {
               widget.device.disconnect();
               streamGps = null;
+              _lastValueSubscription?.cancel();
               nextScreenReplace(
                 context,
                 const ConnectToDevice(),
