@@ -7,17 +7,17 @@ ThemeData lightMode = ThemeData(
   brightness: Brightness.light,
   primaryColor: primaryColor,
   canvasColor: Colors.white,
-  backgroundColor: const Color.fromARGB(255, 216, 229, 253),
+  //backgroundColor: const Color.fromARGB(255, 216, 229, 253),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(primaryColor),
-      padding: MaterialStateProperty.all(
+      backgroundColor: WidgetStateProperty.all(primaryColor),
+      padding: WidgetStateProperty.all(
         const EdgeInsets.symmetric(
           horizontal: 24.0,
           vertical: 12.0,
         ),
       ),
-      shape: MaterialStateProperty.all(
+      shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.0),
         ),
@@ -69,24 +69,24 @@ ThemeData lightMode = ThemeData(
 ThemeData darkMode = ThemeData(
   brightness: Brightness.dark,
   primaryColor: primaryColorDark,
-  backgroundColor: const Color.fromARGB(255, 21, 25, 44),
+  //backgroundColor: const Color.fromARGB(255, 21, 25, 44),
   canvasColor: const Color.fromARGB(255, 13, 10, 24),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
-      padding: MaterialStateProperty.all(
+      padding: WidgetStateProperty.all(
         const EdgeInsets.symmetric(
           horizontal: 24.0,
           vertical: 12.0,
         ),
       ),
-      shape: MaterialStateProperty.all(
+      shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24.0),
         ),
       ),
-      backgroundColor: MaterialStateProperty.all(primaryColorDark),
-      foregroundColor: MaterialStateProperty.all(Colors.black),
-      overlayColor: MaterialStateProperty.all(Colors.black26),
+      backgroundColor: WidgetStateProperty.all(primaryColorDark),
+      foregroundColor: WidgetStateProperty.all(Colors.black),
+      overlayColor: WidgetStateProperty.all(Colors.black26),
     ),
   ),
   textTheme: const TextTheme(

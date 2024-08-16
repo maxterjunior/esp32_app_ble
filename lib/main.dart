@@ -8,11 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:wakelock/wakelock.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Wakelock.enable();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent, // transparent status bar
     statusBarIconBrightness: Brightness.dark, // color icons

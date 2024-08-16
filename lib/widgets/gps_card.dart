@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 // ignore: depend_on_referenced_packages
 import 'package:latlong2/latlong.dart';
-// import 'package:wakelock/wakelock.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class GpsCard extends StatefulWidget {
@@ -27,12 +26,10 @@ class GpsCardState extends State<GpsCard> {
   @override
   void initState() {
     super.initState();
-    // Wakelock.enable();
   }
 
   @override
   void dispose() {
-    // Wakelock.disable();
     super.dispose();
   }
 
